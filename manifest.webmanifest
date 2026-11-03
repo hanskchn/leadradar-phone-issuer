@@ -1,0 +1,10 @@
+{
+  "name": "手机签发器自检",
+  "short_name": "签发自检",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "lang": "zh-CN"
+}

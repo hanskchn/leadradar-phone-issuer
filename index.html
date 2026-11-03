@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="签发自检">
+  <title>手机签发器 · 自检</title>
+  <link rel="icon" href="data:,">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #151b2e;
+      --line: #263149;
+      --text: #e8edf7;
+      --muted: #9aa7bd;
+      --ok: #22c55e;
+      --fail: #ef4444;
+      --warn: #f59e0b;
+      --accent: #3b82f6;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    body {
+      font: 15px/1.55 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      padding: calc(14px + env(safe-area-inset-top)) 14px calc(24px + env(safe-area-inset-bottom));
+      max-width: 720px;
+      margin: 0 auto;
+      -webkit-text-size-adjust: 100%;
+    }
+    h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: .5px; }
+    h2 { font-size: 15px; margin: 0 0 10px; color: var(--text); }
+    p { margin: 6px 0; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+    }
+    .badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 2px; }
+    .badge {
+      font-size: 12px; padding: 3px 9px; border-radius: 999px;
+      background: #1d2740; border: 1px solid var(--line); color: var(--muted);
+    }
+    .badge.good { color: var(--ok); border-color: rgba(34,197,94,.45); }
+    .badge.bad { color: var(--fail); border-color: rgba(239,68,68,.45); }
+    button {
+      font: inherit; color: var(--text); background: #1d2740;
+      border: 1px solid var(--line); border-radius: 11px;
+      padding: 11px 16px; min-height: 44px; cursor: pointer;
+    }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    button:disabled { opacity: .55; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    ul.results { list-style: none; padding: 0; margin: 10px 0 0; }
+    ul.results li {
+      display: grid; grid-template-columns: 22px 1fr; gap: 8px;
+      padding: 9px 0; border-top: 1px solid var(--line);
+    }
+    ul.results li:first-child { border-top: 0; }
+    .icon { font-weight: 700; text-align: center; }
+    .icon.ok { color: var(--ok); }
+    .icon.fail { color: var(--fail); }
+    .icon.warn { color: var(--warn); }
+    .icon.wait { color: var(--muted); }
+    .label { font-weight: 600; }
+    .detail { color: var(--muted); font-size: 13px; word-break: break-all; }
+    .offline {
+      display: none; position: sticky; top: 0; z-index: 9;
+      margin: -14px -14px 10px; padding: 9px 14px;
+      background: #78350f; color: #fde68a; font-size: 13px; font-weight: 600;
+      padding-top: calc(9px + env(safe-area-inset-top));
+    }
+    .offline.show { display: block; }
+    ol.steps { padding-left: 20px; margin: 8px 0; }
+    ol.steps li { margin: 6px 0; }
+    code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .pass {
+      display: inline-block; padding: 2px 8px; border-radius: 7px;
+      background: #0f172a; border: 1px dashed var(--line);
+    }
+    input[type=file] { color: var(--muted); font-size: 13px; max-width: 100%; }
+    .summary { font-size: 14px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="offline" id="offlineBar">离线条：本页已断网，仍能显示说明缓存生效</div>
+
+  <h1>手机签发器 · 自检</h1>
+  <p class="muted">只验证能力，不含任何私钥。四项全绿再进入正式签发器。</p>
+  <div class="badges">
+    <span class="badge" id="bSecure">安全上下文 ?</span>
+    <span class="badge" id="bCrypto">WebCrypto ?</span>
+    <span class="badge" id="bStandalone">独立窗口 ?</span>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <button class="primary" id="runAll">一键自检</button>
+      <button id="copyDiag">复制诊断结果</button>
+    </div>
+    <ul class="results" id="results"></ul>
+    <div class="summary" id="summary"></div>
+  </div>
+
+  <div class="card">
+    <h2>① 加密签名（自动）</h2>
+    <p class="muted">用测试钥匙包解出口令、导入私钥、签一条固定样本，再与 PC 上 Python 签出的签名逐字比对。</p>
+    <p class="muted">测试口令：<span class="pass mono">selfcheck-2026</span></p>
+  </div>
+
+  <div class="card">
+    <h2>② 文件导入（手测）</h2>
+    <p class="muted">先点下面下载测试钥匙包到「文件」，再选择它。若链接只打开预览，点分享 → 存储到「文件」。正式版会用同样的方式导入你的真钥匙包。</p>
+    <div class="row">
+      <a href="./test-phone-keys.json" download="test-phone-keys.json" style="color:var(--accent)">下载测试钥匙包</a>
+      <input type="file" id="keyFile" accept=".json,application/json">
+    </div>
+    <p class="detail" id="fileResult">未测试</p>
+  </div>
+
+  <div class="card">
+    <h2>③ 剪贴板（手测）</h2>
+    <p class="muted">签发后要一键复制激活码，这一步必须可用。</p>
+    <div class="row">
+      <button id="clipWrite">写入测试文本</button>
+      <button id="clipRead">读回并比对</button>
+    </div>
+    <p class="detail" id="clipResult">未测试</p>
+  </div>
+
+  <div class="card">
+    <h2>④ 离线缓存（手测）</h2>
+    <ol class="steps">
+      <li>点 Safari 分享 → <b>添加到主屏幕</b>。</li>
+      <li>打开飞行模式，关掉 Safari 里本页所有标签。</li>
+      <li>从主屏幕图标重新打开本页。</li>
+      <li>顶部出现「离线条」且加密测试仍能跑，即离线通过。</li>
+    </ol>
+    <p class="detail" id="swResult">未测试</p>
+  </div>
+
+  <p class="muted">本页只用于验收能力，不生成任何可用激活码。</p>
+
+  <script type="module" src="./selfcheck.js"></script>
+</body>
+</html>
