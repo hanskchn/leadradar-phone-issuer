@@ -1,6 +1,7 @@
 {
-  "name": "手机签发器自检",
-  "short_name": "签发自检",
+  "name": "手机签发器",
+  "short_name": "签发器",
+  "description": "在手机上给客户签发离线激活码",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
