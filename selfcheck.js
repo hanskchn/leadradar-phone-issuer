@@ -257,6 +257,9 @@ el("keyFile").addEventListener("change", async (event) => {
   el("fileResult").textContent = "读取中…";
   try {
     const bundle = JSON.parse(await file.text());
+    if (Object.keys(bundle.keys || {}).length !== 1) {
+      throw new Error("这看起来是真钥匙包；自检页只认测试钥匙包，请点顶部「返回签发器」导入");
+    }
     const keys = await importKeyBundle(bundle, TEST.passphrase);
     const code = await makeCompact(keys.leadradar, TEST.machine, TEST.expiry, TEST.features);
     const ok = code.split("|")[3] === TEST.expectedSig;
@@ -265,8 +268,12 @@ el("keyFile").addEventListener("change", async (event) => {
       : "签名不一致 ✗（文件内容不对？）";
     upsert("file", "文件导入", ok ? "ok" : "fail", file.name);
   } catch (e) {
-    el("fileResult").textContent = `失败：${e?.message || e}`;
-    upsert("file", "文件导入", "fail", String(e?.message || e));
+    const reason = String(e?.message || e);
+    const hint = reason.includes("口令不对")
+      ? "（自检页只认 test-phone-keys.json；真钥匙包请点顶部「返回签发器」导入）"
+      : "";
+    el("fileResult").textContent = `失败：${reason}${hint}`;
+    upsert("file", "文件导入", "fail", reason);
   }
 });
 

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="dark">
+  <title>重置签发页缓存</title>
+  <style>
+    body {
+      margin: 0; padding: 28px 18px; background: #0b1020; color: #e8edf7;
+      font: 16px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    h1 { font-size: 20px; margin: 0 0 10px; }
+    p { margin: 10px 0; color: #9aa7bd; }
+    a { color: #3b82f6; }
+  </style>
+</head>
+<body>
+  <h1>重置签发页缓存</h1>
+  <p id="msg">正在清理旧版缓存…</p>
+  <p><a href="./">如果 3 秒后没有自动跳转，点这里打开签发器</a></p>
+  <script>
+    (async function () {
+      var msg = document.getElementById("msg");
+      try {
+        if ("serviceWorker" in navigator) {
+          var regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(function (r) { return r.unregister(); }));
+        }
+        if ("caches" in window) {
+          var names = await caches.keys();
+          await Promise.all(names.map(function (n) { return caches.delete(n); }));
+        }
+        msg.textContent = "已清理旧缓存，正在打开签发器…";
+      } catch (e) {
+        msg.textContent = "清理失败：" + (e && e.message ? e.message : e);
+      }
+      setTimeout(function () { location.replace("./"); }, 1200);
+    })();
+  </script>
+</body>
+</html>
