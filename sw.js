@@ -1,4 +1,4 @@
-const CACHE = "issuer-app-v1";
+const CACHE = "issuer-app-v2";
 const ASSETS = [
   "./",
   "./index.html",

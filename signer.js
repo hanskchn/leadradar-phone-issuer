@@ -86,6 +86,15 @@ export async function makeCompact(privateKey, machine, expiryIso, features = "fu
   return `${machine}|${expiryIso}|${features}|${sig}`;
 }
 
+// 与 licensing/keys.py 的 make_activation_code 逐字节同构:
+// base64(紧凑 JSON {machine_code, expiry, features, signature})。
+// 2026-09-28 之前的旧客户端只认这个格式, 手机端默认签长码以兼容全部客户。
+export async function makeLongCode(privateKey, machine, expiryIso, features = "full") {
+  const signature = await signPayload(privateKey, payloadBytes(machine, expiryIso, features));
+  const data = { machine_code: machine, expiry: expiryIso, features, signature };
+  return bytesToB64(new TextEncoder().encode(JSON.stringify(data)));
+}
+
 export async function importPublicKeyB64(spkiB64) {
   return crypto.subtle.importKey(
     "spki",
