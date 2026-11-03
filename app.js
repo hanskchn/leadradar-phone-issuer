@@ -1,6 +1,6 @@
 import {
   importKeyBundle,
-  makeLongCode,
+  makeCompact,
   normalizeMachineCode,
   isoFromNowDays,
   isoLocalEndOfDay,
@@ -415,7 +415,7 @@ async function issue() {
   btn.textContent = "生成中…";
   $("issueMsg").textContent = "";
   try {
-    const code = await makeLongCode(key, mc.value, info.iso, "full");
+    const code = await makeCompact(key, mc.value, info.iso, "full");
     $("resultBox").hidden = false;
     $("resultCode").value = code;
     $("issueMsg").textContent = `已生成 · 到期 ${fmtLocal(info.date)} · 已记入本机记录`;
